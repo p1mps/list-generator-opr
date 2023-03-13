@@ -35,8 +35,21 @@ def print_upgrades(unit):
 
     return upgrade_string
 
-def replace_equipment(equipment, replacement):
-    pass
+def replace_equipment(equipment, gains, select, replaceWhat):
+
+    equipments = []
+
+    for g in gains:
+        while select > 0:
+            equipment_copy = equipment.copy()
+            for s in range(0, select):
+                g.update({'upgrade': True, 'replaceWhat': replaceWhat})
+                equipment_copy.append(g)
+            select = select -1
+            equipments.append(equipment_copy)
+
+    return equipments
+
 
 
 def generate_all_units(unit):
@@ -47,9 +60,39 @@ def generate_all_units(unit):
         if replace != []:
             replacements.append(replace[0])
         #replacements = list(filter (lambda s: s.get('type') == 'replace', upgrade_sections))
-    new_equipment = []
+    equipment = unit['equipment']
+    new_equipments = []
 
-    return replacements
+    # for r in replacements:
+    #     for what in r['replaceWhat']:
+    #         for e in equipment:
+    #             if e['name'] == what:
+    #                 for o in r['options']:
+    #                     new_equipment.append(o['gains'])
+
+    for r in replacements:
+        for e in equipment:
+            if e['name'] == r['replaceWhat']:
+                for o in r['options']:
+                    new_equipments.append(replace_equipment(equipment, o['gains'],r['select'],r['replaceWhat']))
+
+    for equipment in new_equipments:
+        for weapons in equipment:
+            print('====================')
+            upgrades = list(filter (lambda s: s.get('upgrade') == True, weapons))
+            upgrade_names = [u['name'] for u in upgrades]
+            for w in weapons:
+                upgrades_count = len(list(filter (lambda s: s.get('replaceWhat') == w['name'], weapons)))
+                size = unit['size'] - upgrades_count
+
+                if w.get('upgrade') == True:
+                    size = 1
+
+                w['size'] = size
+
+                print(w['name'] + ' ' +  str(w['size']))
+
+    return new_equipments
 
 
 def print_unit(unit):
@@ -69,8 +112,8 @@ with open('Human Defense Force.json', 'r') as openfile:
 units = []
 upgrades = []
 
-for root in army:
-    print(root)
+# for root in army:
+#     print(root)
 
 for unit in army['units']:
     units.append(unit)
@@ -86,8 +129,10 @@ for unit in units:
     unit.update({'upgrades': [find_upgrade(upgrades, u) for u in unit['upgrades']]})
 
 # pprint.pprint(units[0])
-print_unit(units[0])
+unit = units[3]
+#print_unit(unit)
 
 
 # units
-generate_all_units(units[0])
+#pprint.pprint(generate_all_units(unit))
+generate_all_units(unit)
